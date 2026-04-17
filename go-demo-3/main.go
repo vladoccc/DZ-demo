@@ -14,9 +14,9 @@ Menu:
 		case 1:
 			printBookmarks(bookmarks)
 		case 2:
-			bookmarks = addBooksmark(bookmarks)
+			addBooksmark(bookmarks)
 		case 3:
-			bookmarks = deleteBookmark(bookmarks)
+			deleteBookmark(bookmarks)
 		case 4:
 			break Menu
 		}
@@ -34,22 +34,6 @@ func menuScan() int {
 	return variant
 }
 
-func checkInput(bookmarks bookmarkMap) bool {
-	var variant int
-	fmt.Scan(&variant)
-	switch variant {
-	case 1:
-		printBookmarks(bookmarks)
-	case 2:
-		bookmarks = addBooksmark(bookmarks)
-	case 3:
-		bookmarks = deleteBookmark(bookmarks)
-	case 4:
-		return false
-	}
-	return true
-}
-
 func printBookmarks(bookmarks bookmarkMap) {
 	if len(bookmarks) == 0 {
 		fmt.Println("Пока нет закладок")
@@ -59,7 +43,7 @@ func printBookmarks(bookmarks bookmarkMap) {
 	}
 }
 
-func addBooksmark(bookmarks bookmarkMap) bookmarkMap {
+func addBooksmark(bookmarks bookmarkMap) {
 	var newBookmarkKey string
 	var newBookmarkValue string
 	fmt.Print("Введите название: ")
@@ -67,13 +51,11 @@ func addBooksmark(bookmarks bookmarkMap) bookmarkMap {
 	fmt.Print("Введите ссылку: ")
 	fmt.Scan(&newBookmarkValue)
 	bookmarks[newBookmarkKey] = newBookmarkValue
-	return bookmarks
 }
 
-func deleteBookmark(bookmarks bookmarkMap) bookmarkMap {
+func deleteBookmark(bookmarks bookmarkMap) {
 	var BookmarkKeyToDelete string
 	fmt.Print("Введите название: ")
 	fmt.Scan(&BookmarkKeyToDelete)
 	delete(bookmarks, BookmarkKeyToDelete)
-	return bookmarks
 }
