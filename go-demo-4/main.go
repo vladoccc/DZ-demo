@@ -1,47 +1,63 @@
 package main
 
 import (
+	"demo/password/account"
 	"fmt"
-	"math/rand/v2"
 )
 
-type account struct {
-	login    string
-	password string
-	url      string
-}
-
-func (acc account) outpudPassword() {
-	fmt.Println(acc.login, acc.password, acc.url)
-}
-
-var letterRune = []rune("abcdefghijklmnoprstuvwxyzABCDEFGHIJKLMNOPRSTUVWXYZ1234567890-*!")
-
 func main() {
-	fmt.Println(generatePassword(10))
+	fmt.Println("__Менеджер паролей__")
+Menu:
+	for {
+		variant := getMenu()
+		switch variant {
+		case 1:
+			createAccount()
+		case 2:
+			findAccount()
+		case 3:
+			deleteAccount()
+		case 4:
+			break Menu
+		}
+	}
+}
+
+func getMenu() int {
+	var variant int
+	fmt.Println("Выберите вариант: ")
+	fmt.Println("1. Создать аккаунт ")
+	fmt.Println("2. Найти аккаунт ")
+	fmt.Println("3. Удалить аккаунт ")
+	fmt.Println("4. Выход ")
+	fmt.Scanln(&variant)
+	return variant
+}
+
+func findAccount() {
+
+}
+
+func deleteAccount() {
+
+}
+
+func createAccount() {
 	login := promptData("Введите логин")
 	password := promptData("Введите пароль")
 	url := promptData("Введите URL")
-
-	myAccount := account{
-		login:    login,
-		password: password,
-		url:      url,
+	myAccount, err := account.NewAccount(login, password, url)
+	if err != nil {
+		fmt.Println("Неверный формат URL или логин")
+		return
 	}
-	myAccount.outpudPassword()
+	vault := account.NewVault()
+	vault.AddAccount(*myAccount)
 }
 
 func promptData(prompt string) string {
 	fmt.Print(prompt + ": ")
 	var res string
-	fmt.Scan(&res)
+	fmt.Scanln(&res)
 	return res
-}
-
-func generatePassword(n int) string {
-	result := make([]rune, n)
-	for i := range result {
-		result[i] = letterRune[rand.IntN(len(letterRune))]
-	}
-	return string(result)
 }
