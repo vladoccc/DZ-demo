@@ -1,29 +1,38 @@
 package files
 
 import (
-	"fmt"
+	"demo/password/output"
 	"os"
 )
 
-func ReadFile(name string) ([]byte, error) {
-	data, err := os.ReadFile(name)
+type JsonDb struct {
+	filename string
+}
+
+func NewJsonDb(name string) *JsonDb {
+	return &JsonDb{
+		filename: name,
+	}
+}
+
+func (db *JsonDb) Read() ([]byte, error) {
+	data, err := os.ReadFile(db.filename)
 	if err != nil {
-		fmt.Println(err)
+		output.PrintError(err)
 		return nil, err
 	}
 	return data, nil
 }
 
-func WriteFile(contant []byte, name string) {
-	file, err := os.Create(name)
+func (db *JsonDb) Write(contant []byte) {
+	file, err := os.Create(db.filename)
 	if err != nil {
-		fmt.Println(err)
+		output.PrintError(err)
 	}
 	_, err = file.Write(contant)
 	defer file.Close()
 	if err != nil {
-		fmt.Println(err)
+		output.PrintError(err)
 		return
 	}
-	fmt.Println("Запись успешна")
 }

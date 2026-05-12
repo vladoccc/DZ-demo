@@ -1,42 +1,86 @@
 package account
 
 import (
-	"demo/password/files"
+	"demo/password/output"
 	"encoding/json"
+	"strings"
 	"time"
-
-	"github.com/fatih/color"
 )
+
+type Db interface {
+	Read() ([]byte, error)
+	Write([]byte)
+}
 
 type Vault struct {
 	Accounts  []Account `json:"accounts"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-func NewVault() *Vault {
-	file, err := files.ReadFile("data.json")
+type VaultWithDb struct {
+	Vault
+	db Db
+}
+
+func NewVault(db Db) *VaultWithDb {
+	file, err := db.Read()
 	if err != nil {
-		return &Vault{
-			Accounts:  []Account{},
-			UpdatedAt: time.Now(),
+		return &VaultWithDb{
+			Vault: Vault{
+				Accounts:  []Account{},
+				UpdatedAt: time.Now(),
+			},
+			db: db,
 		}
 	}
 	var vault Vault
 	err = json.Unmarshal(file, &vault)
 	if err != nil {
-		color.Red("Не удалось разобрать файл data.json")
+		output.PrintError("Не удалось разобрать файл data.json")
+		return &VaultWithDb{
+			Vault: Vault{
+				Accounts:  []Account{},
+				UpdatedAt: time.Now(),
+			},
+			db: db,
+		}
 	}
-	return &vault
+	return &VaultWithDb{
+		Vault: vault,
+		db:    db,
+	}
 }
 
-func (vault *Vault) AddAccount(acc Account) {
-	vault.Accounts = append(vault.Accounts, acc)
-	vault.UpdatedAt = time.Now()
-	data, err := vault.ToBytes()
-	if err != nil {
-		color.Red("Не удалось преобразовать")
+func (vault *VaultWithDb) FindAccount(str string, checker func(Account, string) bool) []Account {
+	var accounts []Account
+	for _, account := range vault.Accounts {
+		isMatched := checker(account, str)
+		if isMatched {
+			accounts = append(accounts, account)
+		}
 	}
-	files.WriteFile(data, "data.json")
+	return accounts
+}
+
+func (vault *VaultWithDb) DeleteAccountByULR(url string) bool {
+	var accounts []Account
+	isDeleted := false
+	for _, account := range vault.Accounts {
+		isMatched := strings.Contains(account.Url, url)
+		if !isMatched {
+			accounts = append(accounts, account)
+			continue
+		}
+		isDeleted = true
+	}
+	vault.Accounts = accounts
+	vault.save()
+	return isDeleted
+}
+
+func (vault *VaultWithDb) AddAccount(acc Account) {
+	vault.Accounts = append(vault.Accounts, acc)
+	vault.save()
 }
 
 func (vault *Vault) ToBytes() ([]byte, error) {
@@ -45,4 +89,13 @@ func (vault *Vault) ToBytes() ([]byte, error) {
 		return nil, err
 	}
 	return file, nil
+}
+
+func (vault *VaultWithDb) save() {
+	vault.UpdatedAt = time.Now()
+	data, err := vault.Vault.ToBytes()
+	if err != nil {
+		output.PrintError("Не удалось преобразовать")
+	}
+	vault.db.Write(data)
 }
